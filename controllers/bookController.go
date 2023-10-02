@@ -33,3 +33,30 @@ func AddBook(ctx *gin.Context) {
 		"book": newBook,
 	})
 }
+
+func UpdateBook(ctx *gin.Context) {
+	bookID := ctx.Param("bookID")
+	condition := false
+	var updateBook Book
+
+	if err := ctx.ShouldBindJSON(&updateBook); err != nil {
+		ctx.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
+	for i, book := range BookDatas {
+		if bookID == book.ID {
+			condition = true
+			BookDatas[i] = updateBook
+			BookDatas[i].ID = bookID
+			break
+		}
+	}
+
+	if !condition {
+		ctx.AbortWithStatusJSON(http.StatusNotFound, gin.H{
+			"error_status":  "Data Not Found",
+			"error_message": fmt.Sprintf("Book with Id %v has been successfully Updated", bookID),
+		})
+	}
+}
