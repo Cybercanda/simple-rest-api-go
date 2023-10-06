@@ -43,10 +43,6 @@ func AddBook(ctx *gin.Context) {
 		"message": "Created",
 		"book":    newBook,
 	})
-
-	ctx.JSON(http.StatusCreated, gin.H{
-		"book": newBook,
-	})
 }
 
 func UpdateBook(ctx *gin.Context) {
