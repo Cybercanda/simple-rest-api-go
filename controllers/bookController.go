@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 )
 
 type Book struct {
-	ID     string `json:"id"`
+	ID     int    `json:"id"`
 	Title  string `json:"title"`
 	Author string `json:"author"`
 	Desc   string `json:"desc"`
@@ -26,8 +27,22 @@ func AddBook(ctx *gin.Context) {
 		ctx.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
-	newBook.ID = fmt.Sprintf("b%d", len(BookDatas)+1)
+
+	maxID := 0
+	for _, book := range BookDatas {
+		if book.ID > maxID {
+			maxID = book.ID
+		}
+	}
+
+	newBook.ID = maxID + 1
+
 	BookDatas = append(BookDatas, newBook)
+
+	ctx.JSON(http.StatusCreated, gin.H{
+		"message": "Created",
+		"book":    newBook,
+	})
 
 	ctx.JSON(http.StatusCreated, gin.H{
 		"book": newBook,
@@ -35,12 +50,21 @@ func AddBook(ctx *gin.Context) {
 }
 
 func UpdateBook(ctx *gin.Context) {
-	bookID := ctx.Param("bookID")
+	id := ctx.Param("bookID")
 	condition := false
 	var updateBook Book
 
 	if err := ctx.ShouldBindJSON(&updateBook); err != nil {
 		ctx.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
+	bookID, err := strconv.Atoi(id)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error_status":  "Bad Request",
+			"error_message": "Invalid ID Format",
+		})
 		return
 	}
 
@@ -66,11 +90,19 @@ func UpdateBook(ctx *gin.Context) {
 }
 
 func GetBookById(ctx *gin.Context) {
-	bookID := ctx.Param("bookID")
+	id := ctx.Param("bookID")
 	condition := false
 	var bookData Book
 
 	for i, book := range BookDatas {
+		bookID, err := strconv.Atoi(id)
+		if err != nil {
+			ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+				"error_status":  "Bad Request",
+				"error_message": "Invalid ID format",
+			})
+			return
+		}
 		if bookID == book.ID {
 			condition = true
 			bookData = BookDatas[i]
@@ -81,7 +113,7 @@ func GetBookById(ctx *gin.Context) {
 	if !condition {
 		ctx.AbortWithStatusJSON(http.StatusNotFound, gin.H{
 			"error_status":  "Data Not Found",
-			"error_message": fmt.Sprintf("Book with ID %v not found", bookID),
+			"error_message": fmt.Sprintf("Book with ID %v not found", id),
 		})
 		return
 	}
