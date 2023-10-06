@@ -26,7 +26,7 @@ func AddBook(ctx *gin.Context) {
 		ctx.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
-	newBook.ID = fmt.Sprintf("c%d", len(BookDatas)+1)
+	newBook.ID = fmt.Sprintf("b%d", len(BookDatas)+1)
 	BookDatas = append(BookDatas, newBook)
 
 	ctx.JSON(http.StatusCreated, gin.H{
@@ -58,5 +58,34 @@ func UpdateBook(ctx *gin.Context) {
 			"error_status":  "Data Not Found",
 			"error_message": fmt.Sprintf("Book with Id %v has been successfully Updated", bookID),
 		})
+		return
 	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": fmt.Sprintf("Book with ID %v has been successfully updated", bookID),
+	})
+}
+
+func GetBookById(ctx *gin.Context) {
+	bookID := ctx.Param("bookID")
+	condition := false
+	var bookData Book
+
+	for i, book := range BookDatas {
+		if bookID == book.ID {
+			condition = true
+			bookData = BookDatas[i]
+			break
+		}
+	}
+
+	if !condition {
+		ctx.AbortWithStatusJSON(http.StatusNotFound, gin.H{
+			"error_status":  "Data Not Found",
+			"error_message": fmt.Sprintf("Book with ID %v not found", bookID),
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"book": bookData,
+	})
 }

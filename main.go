@@ -1,7 +1,9 @@
 package main
 
-import "fmt"
+import "simple-rest-api-go/routers"
 
 func main() {
-	fmt.Println("Test")
+	var PORT = ":8080"
+
+	routers.StartServer().Run(PORT)
 }
