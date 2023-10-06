@@ -121,3 +121,47 @@ func GetBookById(ctx *gin.Context) {
 		"book": bookData,
 	})
 }
+
+func GetBook(ctx *gin.Context) {
+	ctx.JSON(http.StatusOK, gin.H{
+		"book": BookDatas,
+	})
+}
+
+func DeleteBook(ctx *gin.Context) {
+	id := ctx.Param("bookID")
+	condition := false
+	var bookIndex int
+
+	for i, book := range BookDatas {
+		bookID, err := strconv.Atoi(id)
+		if err != nil {
+			ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+				"error_status":  "Bad Request",
+				"error_message": "Invalid ID format",
+			})
+			return
+		}
+		if bookID == book.ID {
+			condition = true
+			bookIndex = i
+			break
+		}
+	}
+
+	if !condition {
+		ctx.AbortWithStatusJSON(http.StatusNotFound, gin.H{
+			"error_status":  "Data Not Found",
+			"error_message": fmt.Sprintf("Book with ID %v Not Found", id),
+		})
+		return
+	}
+
+	copy(BookDatas[bookIndex:], BookDatas[bookIndex+1:])
+	BookDatas[len(BookDatas)-1] = Book{}
+	BookDatas = BookDatas[:len(BookDatas)-1]
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"Message": fmt.Sprintf("Book with ID %v has been successfully Deleted", id),
+	})
+}
